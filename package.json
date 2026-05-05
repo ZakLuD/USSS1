@@ -1,0 +1,9 @@
+{
+  "name": "tokens-audit-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo \"Static site ready\""
+  }
+}

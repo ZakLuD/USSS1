@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Аудит жетонов</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #182235;
+      --panel-soft: #202b3f;
+      --text: #e5e7eb;
+      --muted: #aab4c3;
+      --line: #334155;
+      --primary: #2f9e96;
+      --primary-hover: #25847e;
+      --danger: #e05d5d;
+      --danger-hover: #c94a4a;
+      --button: #26344a;
+      --button-hover: #30405a;
+      --field: #101827;
+      --focus: rgba(47, 158, 150, 0.22);
+      --table-head: #202b3f;
+      --row-hover: #1d293d;
+      --admin-bg: #214538;
+      --admin-text: #c8f5e1;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    body.light {
+      --bg: #f3f6fa;
+      --panel: #ffffff;
+      --panel-soft: #eef3f8;
+      --text: #172033;
+      --muted: #667085;
+      --line: #d9e2ec;
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --button: #e7eef7;
+      --button-hover: #d8e3f0;
+      --field: #ffffff;
+      --focus: rgba(15, 118, 110, 0.12);
+      --table-head: #eef3f8;
+      --row-hover: #f8fafc;
+      --admin-bg: #dff7ed;
+      --admin-text: #0f5132;
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Arial, sans-serif;
+      transition: background 180ms ease, color 180ms ease;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
+    .page {
+      width: min(1440px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 38px 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 10px 18px rgba(15, 118, 110, 0.22);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--button);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: var(--button-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: var(--danger-hover);
+    }
+
+    .admin-pill {
+      display: none;
+      min-height: 34px;
+      align-items: center;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: var(--admin-bg);
+      color: var(--admin-text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .admin-pill.visible {
+      display: inline-flex;
+    }
+
+    .sync-status {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .theme-toggle {
+      min-height: 42px;
+      padding: 0 8px;
+      border-radius: 8px;
+      background: var(--button);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .theme-option {
+      min-width: 38px;
+      height: 30px;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .theme-option.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 6px 14px rgba(15, 118, 110, 0.22);
+    }
+
+    .search-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 22px;
+    }
+
+    .search {
+      width: min(560px, 100%);
+      height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 0 16px;
+      outline: none;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+    }
+
+    .search:focus,
+    .field input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--focus);
+    }
+
+    .table-shell {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 820px;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+      overflow-wrap: anywhere;
+    }
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 22%;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 34%;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 28%;
+    }
+
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 16%;
+      text-align: right;
+    }
+
+    th {
+      background: var(--table-head);
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    tbody tr:hover {
+      background: var(--row-hover);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .token-number {
+      font-weight: 800;
+      color: #0f766e;
+    }
+
+    .row-actions {
+      display: none;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    body.admin .row-actions {
+      display: flex;
+    }
+
+    .admin-only {
+      display: none;
+    }
+
+    body.admin .admin-only {
+      display: table-cell;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: var(--button);
+      color: var(--text);
+    }
+
+    .icon-btn:hover {
+      background: var(--button-hover);
+      transform: translateY(-1px);
+    }
+
+    .icon-btn.delete:hover {
+      background: rgba(220, 38, 38, 0.16);
+      color: var(--danger);
+    }
+
+    .empty {
+      padding: 44px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(5, 10, 20, 0.64);
+      z-index: 20;
+    }
+
+    .modal-backdrop.visible {
+      display: flex;
+    }
+
+    .modal {
+      width: min(460px, 100%);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+      padding: 24px;
+    }
+
+    .modal h2 {
+      margin: 0 0 18px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .field input {
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--field);
+      color: var(--text);
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .field input:disabled {
+      background: var(--panel-soft);
+      color: var(--muted);
+    }
+
+    .error {
+      display: none;
+      color: var(--danger);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .error.visible {
+      display: block;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .toast-stack {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      display: grid;
+      gap: 10px;
+      z-index: 40;
+    }
+
+    .toast {
+      min-width: 260px;
+      max-width: min(360px, calc(100vw - 40px));
+      border-radius: 8px;
+      padding: 14px 16px;
+      background: var(--panel-soft);
+      color: #fff;
+      box-shadow: var(--shadow);
+      animation: slideIn 180ms ease;
+    }
+
+    .toast.success {
+      background: #0f766e;
+    }
+
+    .toast.error {
+      background: #b91c1c;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 860px) {
+      .page {
+        width: min(100% - 24px, 1440px);
+        padding: 24px 0;
+      }
+
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .actions {
+        justify-content: stretch;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .btn {
+        width: 100%;
+        min-height: 44px;
+        padding: 0 12px;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.2;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .sync-status,
+      .admin-pill {
+        justify-content: center;
+      }
+
+      .sync-status {
+        grid-column: 1 / -1;
+      }
+
+      .theme-toggle {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .search {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .page {
+        width: min(100% - 20px, 1440px);
+        padding: 18px 0;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+
+      .table-shell {
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .table-scroll {
+        overflow: visible;
+      }
+
+      table,
+      thead,
+      tbody,
+      tr,
+      th,
+      td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+      }
+
+      table {
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tbody {
+        display: grid;
+        gap: 12px;
+      }
+
+      tbody tr {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+        overflow: hidden;
+      }
+
+      tbody tr:hover {
+        background: var(--panel);
+      }
+
+      th,
+      td {
+        display: grid;
+        grid-template-columns: minmax(112px, 38%) 1fr;
+        gap: 12px;
+        align-items: center;
+        padding: 13px 14px;
+        text-align: right;
+      }
+
+      td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-align: left;
+        text-transform: uppercase;
+      }
+
+      td:nth-child(4) {
+        text-align: right;
+      }
+
+      .row-actions {
+        justify-content: flex-end;
+      }
+
+      .modal {
+        width: 100%;
+        padding: 20px;
+      }
+
+      .modal-backdrop {
+        align-items: flex-end;
+        padding: 12px;
+      }
+
+      .modal-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .toast-stack {
+        right: 10px;
+        bottom: 10px;
+        left: 10px;
+      }
+
+      .toast {
+        min-width: 0;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <h1>Аудит жетонов</h1>
+      <div class="actions">
+        <span id="adminPill" class="admin-pill">Администратор</span>
+        <span id="syncStatus" class="sync-status">Ожидание данных</span>
+        <div class="theme-toggle" aria-label="Выбор темы">
+          <button id="darkThemeBtn" class="theme-option" type="button" title="Тёмная тема">☾</button>
+          <button id="lightThemeBtn" class="theme-option" type="button" title="Светлая тема">☼</button>
+        </div>
+        <button id="refreshBtn" class="btn btn-secondary" type="button">Обновить</button>
+        <button id="adminBtn" class="btn btn-secondary" type="button">Авторизация администратора</button>
+        <button id="addBtn" class="btn btn-primary" type="button">+ Добавить жетон</button>
+      </div>
+    </header>
+
+    <div class="search-wrap">
+      <input id="searchInput" class="search" type="search" placeholder="Поиск по жетону, никнейму или паспорту">
+    </div>
+
+    <section class="table-shell" aria-label="Таблица жетонов">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Номер жетона</th>
+              <th>Никнейм</th>
+              <th>Номер паспорта</th>
+              <th class="admin-only">Действия</th>
+            </tr>
+          </thead>
+          <tbody id="tokensBody"></tbody>
+        </table>
+        <div id="emptyState" class="empty">Данные загружаются...</div>
+      </div>
+    </section>
+  </main>
+
+  <div id="tokenModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="tokenModalTitle">
+    <div class="modal">
+      <h2 id="tokenModalTitle">Добавить жетон</h2>
+      <form id="tokenForm" class="form">
+        <div class="field">
+          <label for="tokenNumber">Номер жетона</label>
+          <input id="tokenNumber" name="tokenNumber" type="text" inputmode="numeric" autocomplete="off" maxlength="6" required>
+        </div>
+        <div class="field">
+          <label for="nickname">Никнейм</label>
+          <input id="nickname" name="nickname" type="text" autocomplete="off" required>
+        </div>
+        <div class="field">
+          <label for="passportNumber">Номер паспорта</label>
+          <input id="passportNumber" name="passportNumber" type="text" inputmode="numeric" autocomplete="off" required>
+        </div>
+        <div id="formError" class="error"></div>
+        <div class="modal-actions">
+          <button id="cancelTokenBtn" class="btn btn-secondary" type="button">Отмена</button>
+          <button id="saveTokenBtn" class="btn btn-primary" type="submit">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="adminModalTitle">
+    <div class="modal">
+      <h2 id="adminModalTitle">Авторизация администратора</h2>
+      <form id="adminForm" class="form">
+        <div class="field">
+          <label for="adminPassword">Пароль</label>
+          <input id="adminPassword" name="adminPassword" type="password" autocomplete="current-password" required>
+        </div>
+        <div id="adminError" class="error"></div>
+        <div class="modal-actions">
+          <button id="cancelAdminBtn" class="btn btn-secondary" type="button">Отмена</button>
+          <button id="loginAdminBtn" class="btn btn-primary" type="submit">Войти</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+  <script>
+    const state = {
+      tokens: [],
+      mode: 'create',
+      editingTokenNumber: null,
+      adminSession: '',
+      refreshTimer: null,
+      isLoadingTokens: false,
+    };
+
+    const API_BASE_URL = '';
+    const REFRESH_INTERVAL_MS = 5000;
+
+    const elements = {
+      body: document.body,
+      addBtn: document.getElementById('addBtn'),
+      refreshBtn: document.getElementById('refreshBtn'),
+      adminBtn: document.getElementById('adminBtn'),
+      adminPill: document.getElementById('adminPill'),
+      syncStatus: document.getElementById('syncStatus'),
+      darkThemeBtn: document.getElementById('darkThemeBtn'),
+      lightThemeBtn: document.getElementById('lightThemeBtn'),
+      searchInput: document.getElementById('searchInput'),
+      tokensBody: document.getElementById('tokensBody'),
+      emptyState: document.getElementById('emptyState'),
+      tokenModal: document.getElementById('tokenModal'),
+      tokenModalTitle: document.getElementById('tokenModalTitle'),
+      tokenForm: document.getElementById('tokenForm'),
+      tokenNumber: document.getElementById('tokenNumber'),
+      nickname: document.getElementById('nickname'),
+      passportNumber: document.getElementById('passportNumber'),
+      formError: document.getElementById('formError'),
+      saveTokenBtn: document.getElementById('saveTokenBtn'),
+      cancelTokenBtn: document.getElementById('cancelTokenBtn'),
+      adminModal: document.getElementById('adminModal'),
+      adminForm: document.getElementById('adminForm'),
+      adminPassword: document.getElementById('adminPassword'),
+      adminError: document.getElementById('adminError'),
+      loginAdminBtn: document.getElementById('loginAdminBtn'),
+      cancelAdminBtn: document.getElementById('cancelAdminBtn'),
+      toastStack: document.getElementById('toastStack'),
+    };
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    function init() {
+      applySavedTheme();
+      bindEvents();
+
+      loadTokens();
+      startLiveRefresh();
+    }
+
+    function bindEvents() {
+      elements.addBtn.addEventListener('click', () => openTokenModal());
+      elements.refreshBtn.addEventListener('click', () => loadTokens({ force: true }));
+      elements.darkThemeBtn.addEventListener('click', () => setTheme('dark'));
+      elements.lightThemeBtn.addEventListener('click', () => setTheme('light'));
+      elements.adminBtn.addEventListener('click', openAdminModal);
+      elements.cancelTokenBtn.addEventListener('click', closeTokenModal);
+      elements.cancelAdminBtn.addEventListener('click', closeAdminModal);
+      elements.searchInput.addEventListener('input', renderTokens);
+      elements.tokenForm.addEventListener('submit', handleTokenSubmit);
+      elements.adminForm.addEventListener('submit', handleAdminSubmit);
+      elements.tokenModal.addEventListener('click', closeWhenBackdropClicked);
+      elements.adminModal.addEventListener('click', closeWhenBackdropClicked);
+      elements.tokenNumber.addEventListener('input', onlyDigits);
+      elements.passportNumber.addEventListener('input', onlyDigits);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          loadTokens({ silent: true });
+        }
+      });
+    }
+
+    function startLiveRefresh() {
+      if (state.refreshTimer) {
+        clearInterval(state.refreshTimer);
+      }
+
+      state.refreshTimer = setInterval(() => {
+        if (!document.hidden) {
+          loadTokens({ silent: true });
+        }
+      }, REFRESH_INTERVAL_MS);
+    }
+
+    function applySavedTheme() {
+      setTheme(localStorage.getItem('tokensTheme') || 'dark', false);
+    }
+
+    function setTheme(theme, shouldSave = true) {
+      const normalizedTheme = theme === 'light' ? 'light' : 'dark';
+      elements.body.classList.toggle('light', normalizedTheme === 'light');
+      elements.darkThemeBtn.classList.toggle('active', normalizedTheme === 'dark');
+      elements.lightThemeBtn.classList.toggle('active', normalizedTheme === 'light');
+      elements.darkThemeBtn.setAttribute('aria-pressed', String(normalizedTheme === 'dark'));
+      elements.lightThemeBtn.setAttribute('aria-pressed', String(normalizedTheme === 'light'));
+
+      if (shouldSave) {
+        localStorage.setItem('tokensTheme', normalizedTheme);
+      }
+    }
+
+    async function loadTokens(options = {}) {
+      if (state.isLoadingTokens && !options.force) {
+        return;
+      }
+
+      state.isLoadingTokens = true;
+
+      if (!options.silent) {
+        setEmptyText('Данные загружаются...');
+      }
+
+      setSyncStatus('Обновление...');
+
+      try {
+        state.tokens = await apiRequest('/.netlify/functions/tokens');
+        renderTokens();
+        setSyncStatus(`Обновлено: ${new Date().toLocaleTimeString('ru-RU')}`);
+      } catch (error) {
+        const message = formatError(error);
+        if (!options.silent) {
+          setEmptyText(`Не удалось загрузить данные: ${message}`);
+          showToast(message, 'error');
+        }
+        setSyncStatus(`Ошибка: ${message}`);
+      } finally {
+        state.isLoadingTokens = false;
+      }
+    }
+
+    function renderTokens() {
+      const query = elements.searchInput.value.trim().toLowerCase();
+      const filteredTokens = state.tokens.filter(token => {
+        return [token.tokenNumber, token.nickname, token.passportNumber]
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
+      });
+
+      elements.tokensBody.innerHTML = '';
+
+      filteredTokens.forEach(token => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td data-label="Номер жетона"><span class="token-number">${escapeHtml(token.tokenNumber)}</span></td>
+          <td data-label="Никнейм">${escapeHtml(token.nickname)}</td>
+          <td data-label="Номер паспорта">${escapeHtml(token.passportNumber)}</td>
+          <td class="admin-only" data-label="Действия">
+            <div class="row-actions">
+              <button class="icon-btn" type="button" title="Редактировать" data-action="edit" data-token="${escapeHtml(token.tokenNumber)}">✏️</button>
+              <button class="icon-btn delete" type="button" title="Удалить" data-action="delete" data-token="${escapeHtml(token.tokenNumber)}">🗑</button>
+            </div>
+          </td>
+        `;
+
+        row.querySelector('[data-action="edit"]').addEventListener('click', () => openTokenModal(token));
+        row.querySelector('[data-action="delete"]').addEventListener('click', () => confirmDelete(token));
+        elements.tokensBody.appendChild(row);
+      });
+
+      elements.emptyState.style.display = filteredTokens.length ? 'none' : 'block';
+      setEmptyText(query ? 'Ничего не найдено' : 'Пока нет жетонов');
+    }
+
+    function openTokenModal(token) {
+      state.mode = token ? 'edit' : 'create';
+      state.editingTokenNumber = token ? token.tokenNumber : null;
+      elements.tokenModalTitle.textContent = token ? 'Редактировать жетон' : 'Добавить жетон';
+      elements.tokenNumber.value = token ? token.tokenNumber : '';
+      elements.nickname.value = token ? token.nickname : '';
+      elements.passportNumber.value = token ? token.passportNumber : '';
+      elements.tokenNumber.disabled = Boolean(token);
+      clearError(elements.formError);
+      elements.tokenModal.classList.add('visible');
+      setTimeout(() => (token ? elements.nickname : elements.tokenNumber).focus(), 0);
+    }
+
+    function closeTokenModal() {
+      elements.tokenModal.classList.remove('visible');
+      elements.tokenForm.reset();
+      elements.tokenNumber.disabled = false;
+      state.mode = 'create';
+      state.editingTokenNumber = null;
+      clearError(elements.formError);
+      setSaving(false);
+    }
+
+    async function handleTokenSubmit(event) {
+      event.preventDefault();
+
+      const token = {
+        tokenNumber: elements.tokenNumber.value.trim(),
+        nickname: elements.nickname.value.trim(),
+        passportNumber: elements.passportNumber.value.trim(),
+      };
+
+      const validationError = validateToken(token, state.mode);
+
+      if (validationError) {
+        showError(elements.formError, validationError);
+        return;
+      }
+
+      clearError(elements.formError);
+      setSaving(true);
+
+      try {
+        const result = state.mode === 'edit'
+          ? await apiRequest('/.netlify/functions/tokens', {
+            method: 'PUT',
+            body: {
+              ...token,
+              tokenNumber: state.editingTokenNumber,
+            },
+            admin: true,
+          })
+          : await apiRequest('/.netlify/functions/tokens', {
+            method: 'POST',
+            body: token,
+          });
+
+        state.tokens = result.tokens || [];
+        renderTokens();
+        closeTokenModal();
+        showToast(result.message, 'success');
+      } catch (error) {
+        const message = formatError(error);
+        showError(elements.formError, message);
+        showToast(message === 'Жетон уже существует' ? 'Ошибка: жетон уже существует' : message, 'error');
+        setSaving(false);
+      }
+    }
+
+    function validateToken(token, mode) {
+      if ((mode === 'create' && !token.tokenNumber) || !token.nickname || !token.passportNumber) {
+        return 'Все поля обязательны';
+      }
+
+      if (mode === 'create' && !/^\d{6}$/.test(token.tokenNumber)) {
+        return 'Номер жетона должен состоять ровно из 6 цифр';
+      }
+
+      if (!/^\d+$/.test(token.passportNumber)) {
+        return 'Номер паспорта должен быть числом';
+      }
+
+      return '';
+    }
+
+    function confirmDelete(token) {
+      openConfirmModal(
+        `Удалить жетон ${token.tokenNumber}?`,
+        async () => {
+          try {
+            const result = await apiRequest(`/.netlify/functions/tokens?tokenNumber=${encodeURIComponent(token.tokenNumber)}`, {
+              method: 'DELETE',
+              admin: true,
+            });
+            state.tokens = result.tokens || [];
+            renderTokens();
+            showToast(result.message, 'success');
+          } catch (error) {
+            showToast(formatError(error), 'error');
+          }
+        }
+      );
+    }
+
+    function openConfirmModal(message, onConfirm) {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop visible';
+      backdrop.innerHTML = `
+        <div class="modal">
+          <h2>Подтверждение</h2>
+          <p style="margin: 0; color: var(--muted);">${escapeHtml(message)}</p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" type="button" data-cancel>Отмена</button>
+            <button class="btn btn-danger" type="button" data-confirm>Удалить</button>
+          </div>
+        </div>
+      `;
+
+      backdrop.addEventListener('click', event => {
+        if (event.target === backdrop || event.target.hasAttribute('data-cancel')) {
+          backdrop.remove();
+        }
+      });
+
+      backdrop.querySelector('[data-confirm]').addEventListener('click', () => {
+        backdrop.remove();
+        onConfirm();
+      });
+
+      document.body.appendChild(backdrop);
+    }
+
+    function openAdminModal() {
+      clearError(elements.adminError);
+      elements.adminPassword.value = '';
+      elements.adminModal.classList.add('visible');
+      setTimeout(() => elements.adminPassword.focus(), 0);
+    }
+
+    function closeAdminModal() {
+      elements.adminModal.classList.remove('visible');
+      elements.adminForm.reset();
+      clearError(elements.adminError);
+      setAdminLoading(false);
+    }
+
+    async function handleAdminSubmit(event) {
+      event.preventDefault();
+
+      clearError(elements.adminError);
+      setAdminLoading(true);
+
+      try {
+        const result = await apiRequest('/.netlify/functions/admin', {
+          method: 'POST',
+          body: { password: elements.adminPassword.value },
+        });
+        state.adminSession = result.adminSession;
+        elements.body.classList.add('admin');
+        elements.adminPill.classList.add('visible');
+        elements.adminBtn.textContent = 'Админ авторизован';
+        closeAdminModal();
+        showToast(result.message, 'success');
+      } catch (error) {
+        const message = formatError(error);
+        showError(elements.adminError, message);
+        showToast(message, 'error');
+        setAdminLoading(false);
+      }
+    }
+
+    function closeWhenBackdropClicked(event) {
+      if (event.target === elements.tokenModal) {
+        closeTokenModal();
+      }
+
+      if (event.target === elements.adminModal) {
+        closeAdminModal();
+      }
+    }
+
+    function onlyDigits(event) {
+      event.target.value = event.target.value.replace(/\D/g, '');
+    }
+
+    async function apiRequest(url, options = {}) {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+
+      if (options.admin && state.adminSession) {
+        headers.Authorization = `Bearer ${state.adminSession}`;
+      }
+
+      const response = await fetch(`${API_BASE_URL}${url}`, {
+        method: options.method || 'GET',
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка сервера');
+      }
+
+      return data;
+    }
+
+    function setSaving(isSaving) {
+      elements.saveTokenBtn.disabled = isSaving;
+      elements.saveTokenBtn.textContent = isSaving ? 'Сохранение...' : 'Сохранить';
+    }
+
+    function setAdminLoading(isLoading) {
+      elements.loginAdminBtn.disabled = isLoading;
+      elements.loginAdminBtn.textContent = isLoading ? 'Вход...' : 'Войти';
+    }
+
+    function showError(element, message) {
+      element.textContent = message;
+      element.classList.add('visible');
+    }
+
+    function clearError(element) {
+      element.textContent = '';
+      element.classList.remove('visible');
+    }
+
+    function setEmptyText(text) {
+      elements.emptyState.textContent = text;
+    }
+
+    function setSyncStatus(text) {
+      elements.syncStatus.textContent = text;
+    }
+
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type || ''}`;
+      toast.textContent = message;
+      elements.toastStack.appendChild(toast);
+      setTimeout(() => toast.remove(), 3200);
+    }
+
+    function formatError(error) {
+      const message = error && error.message ? error.message : String(error || 'Ошибка');
+      return message.replace(/^Exception:\s*/, '');
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

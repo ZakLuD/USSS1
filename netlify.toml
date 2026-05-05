@@ -1,0 +1,19 @@
+[build]
+  command = "echo Static site ready"
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/tokens"
+  to = "/.netlify/functions/tokens"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin"
+  to = "/.netlify/functions/admin"
+  status = 200
+
+[[redirects]]
+  from = "/api/health"
+  to = "/.netlify/functions/health"
+  status = 200
